@@ -10,6 +10,7 @@ class Launcher : Form {
  FlowLayoutPanel buttons=new FlowLayoutPanel();
  Launcher(){
   Text="耄耋机器人";Size=new Size(650,430);MinimumSize=new Size(600,380);StartPosition=FormStartPosition.CenterScreen;Font=new Font("Microsoft YaHei UI",10);
+  Icon=System.Drawing.Icon.ExtractAssociatedIcon(Application.ExecutablePath);ShowIcon=true;
   var title=new Label{Text="耄耋 · 本机控制台",Dock=DockStyle.Top,Height=52,Padding=new Padding(16),Font=new Font("Microsoft YaHei UI",15,FontStyle.Bold)};
   output.Multiline=true;output.ReadOnly=true;output.ScrollBars=ScrollBars.Vertical;output.Dock=DockStyle.Fill;output.BackColor=Color.White;output.BorderStyle=BorderStyle.FixedSingle;
   buttons.Dock=DockStyle.Top;buttons.Height=88;buttons.Padding=new Padding(8);

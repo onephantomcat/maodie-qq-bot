@@ -43,6 +43,8 @@ powershell -NoProfile -ExecutionPolicy Bypass -File windows/build.ps1
 # dist/耄耋机器人.exe；放到包含 app/ 的安装目录中使用
 ```
 
+本机自定义图标可在编译时传入 `-IconPath C:\Icons\cat.ico`。EXE 内嵌图标同时用于文件、窗口标题栏和任务栏；头像文件不需要随程序分发。
+
 ### 更新与回收
 
 在启动器中点“安装更新”，选择本项目的新版发布 ZIP。也可以运行：
