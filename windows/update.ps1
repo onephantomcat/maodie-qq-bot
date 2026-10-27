@@ -66,6 +66,23 @@ try {
  # Only recycle the exact former app directory after successful verification.
  if((Split-Path $old -Parent) -ne $installPath -or !(Split-Path $old -Leaf).StartsWith('old-app-')){throw 'Recycle target escaped installation.'}
  [Microsoft.VisualBasic.FileIO.FileSystem]::DeleteDirectory($old,'OnlyErrorDialogs','SendToRecycleBin','ThrowException')
+ # Recycle obsolete release ZIPs only within this installation's known caches.
+ $cacheFolders=@($installPath,(Join-Path $installPath 'outputs'),(Join-Path $appPath 'dist'))
+ foreach($folder in (Get-ChildItem -LiteralPath $installPath -Directory)){
+  if(!($folder.Attributes -band [IO.FileAttributes]::ReparsePoint) -and (Test-Path -LiteralPath (Join-Path $folder.FullName '.git'))){$cacheFolders+=(Join-Path $folder.FullName 'dist')}
+ }
+ foreach($cache in $cacheFolders){
+  if(!(Test-Path -LiteralPath $cache)){continue}
+  if((Get-Item -LiteralPath $cache).Attributes -band [IO.FileAttributes]::ReparsePoint){continue}
+  foreach($archive in (Get-ChildItem -LiteralPath $cache -File -Filter 'maodie-windows-*.zip')){
+   if($archive.Name -match '^maodie-windows-(\d+\.\d+\.\d+)\.zip$' -and [Version]$Matches[1] -lt $newVersion){
+    $archivePath=[IO.Path]::GetFullPath($archive.FullName)
+    if(!$archivePath.StartsWith($installPath+'\',[StringComparison]::OrdinalIgnoreCase)){throw 'Archive cleanup escaped installation.'}
+    try{[Microsoft.VisualBasic.FileIO.FileSystem]::DeleteFile($archivePath,'OnlyErrorDialogs','SendToRecycleBin','ThrowException')}
+    catch{Write-Warning 'Update succeeded; an old package could not be recycled.'}
+   }
+  }
+ }
  Write-Output "Update completed: $newVersion. Previous app sent to Recycle Bin."
 } catch {
  $failure=$_

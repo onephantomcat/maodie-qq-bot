@@ -35,12 +35,16 @@ try{
  Save-Text (Join-Path $oldApp 'assets\stickers\local-only.png') 'private-test-media'
  $packageFolder=Join-Path $testRoot 'package';$incoming=Join-Path $packageFolder 'app';Make-App $incoming '1.1.0'
  $zipPath=Join-Path $testRoot 'update.zip';[IO.Compression.ZipFile]::CreateFromDirectory($packageFolder,$zipPath)
+ $obsoleteZip=Join-Path $install 'outputs\maodie-windows-1.0.0.zip';Save-Text $obsoleteZip 'obsolete-test-package'
+ $latestZip=Join-Path $install 'outputs\maodie-windows-1.1.0.zip';Save-Text $latestZip 'keep-current-package'
  Run-Update $install $zipPath $true
  Assert-That ((Get-Content (Join-Path $oldApp 'package.json') -Raw|ConvertFrom-Json).version -eq '1.1.0') 'New version not installed'
  Assert-That ([IO.File]::ReadAllText((Join-Path $oldApp 'config.local.json')) -eq $configText) 'Local config changed'
  Assert-That ((Get-Content (Join-Path $oldApp 'assets\stickers\local-only.png') -Raw) -eq 'private-test-media') 'Local media lost'
  Assert-That ((Get-Content $statePath -Raw) -eq '{"sentinel":"keep-switches"}') 'Saved controls changed'
  Assert-That (@(Get-ChildItem $install -Directory -Filter 'old-app-*').Count -eq 0) 'Old app not recycled'
+ Assert-That (!(Test-Path -LiteralPath $obsoleteZip)) 'Obsolete package not recycled'
+ Assert-That (Test-Path -LiteralPath $latestZip) 'Current package was recycled'
  Run-Update $install $zipPath $false
  Assert-That ((Get-Content (Join-Path $oldApp 'package.json') -Raw|ConvertFrom-Json).version -eq '1.1.0') 'Same-version refusal changed app'
  $badZip=Join-Path $testRoot 'escape.zip';$z=[IO.Compression.ZipFile]::Open($badZip,'Create');try{$e=$z.CreateEntry('../escaped.txt');$writer=New-Object IO.StreamWriter($e.Open());$writer.Write('no');$writer.Dispose()}finally{$z.Dispose()}
