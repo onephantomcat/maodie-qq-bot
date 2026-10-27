@@ -12,7 +12,8 @@
     "thinkingType": "disabled",
     "temperature": 1.0,
     "maxTokens": 320,
-    "timeoutMs": 45000
+    "timeoutMs": 45000,
+    "visionModel": "deepseek-v4.1-flash"
   },
   "ownerId": "40001",
   "politeUsers": [],
@@ -46,6 +47,9 @@
     "enabled": true,
     "mergeWindowMs": 850,
     "imageOcr": true,
-    "ocrPython": "python"
+    "ocrPython": "python",
+    "autoImages": true,
+    "imageProbability": 0.2,
+    "imageVision": true
   }
 }

@@ -2,7 +2,7 @@ import { readFile, writeFile, rename, mkdir } from 'node:fs/promises';
 import { dirname } from 'node:path';
 
 export function controlSnapshot(bot) {
-  return { selfId: bot.config.selfId, ownerId: bot.config.ownerId, groups: [...bot.states.values()].map(({ groupId, enabled, wildMode, spice, stickersEnabled }) => ({ groupId, enabled, wildMode, spice, stickersEnabled })) };
+  return { selfId: bot.config.selfId, ownerId: bot.config.ownerId, groups: [...bot.states.values()].map(({ groupId, enabled, wildMode, spice, stickersEnabled, autoImageEnabled, autoImageProbability }) => ({ groupId, enabled, wildMode, spice, stickersEnabled, ...(autoImageEnabled!=null?{autoImageEnabled}:{}),...(autoImageProbability!=null?{autoImageProbability}:{}) })) };
 }
 
 export async function restoreControls(bot, path) {
@@ -14,6 +14,10 @@ export async function restoreControls(bot, path) {
     const state = bot.states.get(value.groupId);
     if (!state) continue;
     if (['enabled', 'wildMode', 'stickersEnabled'].some(key => typeof value[key] !== 'boolean') || !Number.isInteger(value.spice) || value.spice < 0 || value.spice > 3) throw new Error('已保存的群开关格式不正确');
+    if(value.autoImageEnabled!=null&&typeof value.autoImageEnabled!=='boolean')throw new Error('已保存的自动识图开关格式不正确');
+    if(value.autoImageProbability!=null&&(!Number.isFinite(value.autoImageProbability)||value.autoImageProbability<0||value.autoImageProbability>1))throw new Error('已保存的识图概率格式不正确');
+    if(value.autoImageEnabled!=null)state.autoImageEnabled=value.autoImageEnabled;
+    if(value.autoImageProbability!=null)state.autoImageProbability=value.autoImageProbability;
     Object.assign(state, { enabled: value.enabled, wildMode: value.enabled && value.wildMode, spice: value.spice, stickersEnabled: value.stickersEnabled });
   }
 }

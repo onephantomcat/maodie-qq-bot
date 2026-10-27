@@ -86,6 +86,8 @@ test('QQ图片地址有域名、类型和体积限制，不跟随任意URL或转
  let calls=0;const fetchImpl=async(_url,options)=>{calls++;assert.equal(options.redirect,'error');assert.equal(options.headers,undefined);return new Response(Buffer.from('png'),{headers:{'content-type':'image/png'}});};
  for(const url of ['http://127.0.0.1/private','https://gchat.qpic.cn.evil.example/x','file:///C:/secret','https://user:pass@gchat.qpic.cn/x'])await assert.rejects(()=>fetchQQImage({url},{fetchImpl}));
  assert.equal(calls,0);assert.equal((await fetchQQImage({url:'https://gchat.qpic.cn/gchatpic_new/test'},{fetchImpl})).toString(),'png');
+ assert.equal((await fetchQQImage({url:'https://gxh.vip.qq.com/club/item/parcel/item/aa/aabbccddeeff00112233445566778899/raw300.gif'},{fetchImpl})).toString(),'png');
+ await assert.rejects(()=>fetchQQImage({url:'https://gxh.vip.qq.com/other/private'},{fetchImpl}));
  await assert.rejects(()=>fetchQQImage({url:'https://gchat.qpic.cn/x'},{fetchImpl:async()=>new Response('x',{headers:{'content-type':'text/html'}})}));
  await assert.rejects(()=>fetchQQImage({url:'https://gchat.qpic.cn/x'},{fetchImpl:async()=>new Response('x',{headers:{'content-type':'image/png','content-length':String(6*1024*1024)}})}),/5MB/);
  assert.equal(imageSegments({message:[{type:'image',data:{url:'u',file:'f'}}]}).length,1);

@@ -12,6 +12,8 @@ export function validateConfig(c) {
   if(c.features!=null){
     if(typeof c.features!=='object'||Array.isArray(c.features)||typeof c.features.enabled!=='boolean'||typeof c.features.imageOcr!=='boolean')fail('features.enabled 与 imageOcr 必须为布尔值');
     if(!Number.isInteger(c.features.mergeWindowMs)||c.features.mergeWindowMs<0||c.features.mergeWindowMs>2000)fail('mergeWindowMs 应为0到2000毫秒');
+    for(const key of ['autoImages','imageVision'])if(c.features[key]!=null&&typeof c.features[key]!=='boolean')fail(key+' 必须为布尔值');
+    if(c.features.imageProbability!=null&&(!Number.isFinite(c.features.imageProbability)||c.features.imageProbability<0||c.features.imageProbability>1))fail('imageProbability 应为0到1');
     if(typeof c.features.ocrPython!=='string'||!c.features.ocrPython.trim())fail('ocrPython 应为本机Python命令或路径');
   }
   if (!id(c.selfId)) fail('selfId 必须是字符串格式的小号 QQ 号');
@@ -45,6 +47,7 @@ export function validateConfig(c) {
   if (api.username || api.password || api.search || api.hash) fail('模型地址不要包含账号、查询参数或片段');
   if (ws.username || ws.password || ws.search || ws.hash) fail('OneBot token 请单独填写，不要放在 URL 中');
   if (!String(c.llm.apiKey || '').trim()) fail('缺少 API Key，请双击“配置机器人.cmd”在本机填写');
+  if(c.llm.visionModel!=null&&(typeof c.llm.visionModel!=='string'||!c.llm.visionModel.trim()))fail('visionModel 应为有效模型ID');
   if (!String(c.llm.model || '').trim()) fail('缺少模型 ID');
   if (c.llm.thinkingType != null && !['enabled', 'disabled'].includes(c.llm.thinkingType)) fail('thinkingType 应为 enabled 或 disabled');
   if (typeof c.onebot.token !== 'string') fail('onebot.token 必须是字符串');

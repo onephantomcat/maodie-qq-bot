@@ -4,7 +4,7 @@ os.environ.setdefault('OMP_NUM_THREADS', '2')
 os.environ.setdefault('OPENBLAS_NUM_THREADS', '2')
 engine = None
 
-def recognize(encoded):
+def recognize(encoded, with_image=False):
     global engine
     raw = base64.b64decode(encoded, validate=True)
     if len(raw) > 5 * 1024 * 1024:
@@ -33,7 +33,14 @@ def recognize(encoded):
                 texts.append(text.strip())
         if len('\n'.join(texts)) >= 600:
             break
-    return '\n'.join(texts)[:600]
+    text = '\n'.join(texts)[:600]
+    result = {'text': text}
+    if with_image and len(''.join(text.split())) < 4:
+        image.thumbnail((1024, 1024))
+        output = io.BytesIO()
+        image.save(output, format='JPEG', quality=82)
+        result['imageData'] = 'data:image/jpeg;base64,' + base64.b64encode(output.getvalue()).decode('ascii')
+    return result
 
 for line in sys.stdin:
     if len(line) > 8 * 1024 * 1024:
@@ -41,8 +48,8 @@ for line in sys.stdin:
     request = None
     try:
         request = json.loads(line)
-        text = recognize(request['image'])
-        response = {'id': request['id'], 'text': text}
+        result = recognize(request['image'], request.get('withImage', False))
+        response = {'id': request['id'], **result}
     except ImportError:
         response = {'id': (request or {}).get('id'), 'error': '本机缺少OCR依赖，请安装rapidocr、onnxruntime和Pillow'}
     except Exception:

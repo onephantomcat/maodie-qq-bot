@@ -6,6 +6,14 @@ const timeLabel = value => new Date(value).toLocaleString('zh-CN', { timeZone: '
 const empty = () => ({ calls: 0, failed: 0, input: 0, output: 0, missingUsage: 0, unpriced: 0, microYuan: 0 });
 const tokenCount = n => Number.isSafeInteger(n) && n >= 0 ? n : null;
 
+export function visionRate(date){
+  const parts=new Intl.DateTimeFormat('en-US',{timeZone:'Asia/Shanghai',weekday:'short',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).formatToParts(date);
+  const get=key=>parts.find(x=>x.type===key)?.value;
+  const minute=Number(get('hour'))*60+Number(get('minute'));
+  const peak=!['Sat','Sun'].includes(get('weekday'))&&((minute>=540&&minute<720)||(minute>=840&&minute<1080));
+  return peak?{input:1.6,output:6.4}:{input:0.8,output:3.2};
+}
+
 export class UsageMeter {
   constructor(path, { now = () => new Date(), historicalBill = null } = {}) {
     this.path = path; this.now = now; this.historicalBill = historicalBill; this.writes = Promise.resolve();
@@ -32,7 +40,7 @@ export class UsageMeter {
     return this.writes;
   }
   async record({ model, usage, ok, groupId, scope = 'chat' }) {
-    const day = dayKey(this.now());
+    const at=this.now();const day = dayKey(at);
     const key = scope === 'chat' && /^\d+$/.test(String(groupId)) ? `群${groupId}` : scope === 'learning' ? '学习整理' : '本机预览';
     const groups = this.data.days[day] ||= {};
     const row = groups[key] ||= empty();
@@ -43,6 +51,7 @@ export class UsageMeter {
       row.input += input; row.output += output;
       // 仅采用2026-10-26已核对账单的Flash观察单价，明确作为估算，不冒充实时账单。
       if (model === 'deepseek-v4-flash') row.microYuan += input + 2 * output;
+      else if(model==='deepseek-v4.1-flash'){const rate=visionRate(at);row.microYuan+=Math.round(input*rate.input+output*rate.output);}
       else row.unpriced++;
     }
     await this.save();
@@ -59,7 +68,7 @@ export class UsageMeter {
     const lines = [ `【耄耋 · ${todayOnly ? '今日' : '累计'}用量】`, `本机统计起于：${timeLabel(this.data.startedAt)}`, ...(todayOnly ? [`统计日期：${today}（北京时间）`] : []), line(totals),
       ...Object.entries(byGroup).map(([name, row]) => `${name}：${line(row)}`),
       `失败/取消/结果未知：${totals.failed}次；缺usage：${totals.missingUsage}次；无适用单价：${totals.unpriced}次。`,
-      '估算采用10月26日Flash账单单价：输入¥1/百万、输出¥2/百万。未知用量和单价不计入金额，实际扣费以官网为准。' ];
+      '估算：文本Flash输入¥1/百万、输出¥2/百万；视觉4.1 Flash按10月27日目录价与北京时间峰谷估算，未扣缓存折扣。未知用量和单价不计金额，实际扣费以官网为准。' ];
     const historicalBill = this.historicalBill?.total;
     if (historicalBill && (!todayOnly || String(historicalBill.last).startsWith(today))) {
       lines.push(`历史已核对账单：${historicalBill.calls}次，¥${historicalBill.cost_yuan}，截至${historicalBill.last}。`, '历史账单与本机新增统计分别显示，中间未记录的区间不能据此合计为完整累计费用。');
