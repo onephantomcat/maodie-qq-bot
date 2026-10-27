@@ -41,5 +41,11 @@
     "respondToInteractions": true,
     "wildReplyProbability": 0.2,
     "spice": 3
+  },
+  "features": {
+    "enabled": true,
+    "mergeWindowMs": 850,
+    "imageOcr": true,
+    "ocrPython": "python"
   }
 }

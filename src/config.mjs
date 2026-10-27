@@ -9,6 +9,11 @@ export function validateConfig(c) {
     if (!Number.isFinite(c.media.stickerProbability) || c.media.stickerProbability < 0 || c.media.stickerProbability > 1) fail('stickerProbability 应为 0 到 1');
     for (const name of ['audioDirectory', 'stickerDirectory']) if (typeof c.media[name] !== 'string') fail(`media.${name} 应为本机目录字符串`);
   }
+  if(c.features!=null){
+    if(typeof c.features!=='object'||Array.isArray(c.features)||typeof c.features.enabled!=='boolean'||typeof c.features.imageOcr!=='boolean')fail('features.enabled 与 imageOcr 必须为布尔值');
+    if(!Number.isInteger(c.features.mergeWindowMs)||c.features.mergeWindowMs<0||c.features.mergeWindowMs>2000)fail('mergeWindowMs 应为0到2000毫秒');
+    if(typeof c.features.ocrPython!=='string'||!c.features.ocrPython.trim())fail('ocrPython 应为本机Python命令或路径');
+  }
   if (!id(c.selfId)) fail('selfId 必须是字符串格式的小号 QQ 号');
   if (!Array.isArray(c.groups) || !c.groups.length) fail('至少配置一个群和一个目标机器人');
   const groups = new Set();

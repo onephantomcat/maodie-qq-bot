@@ -8,3 +8,6 @@ dist/
 *.zip
 *.log
 使用说明.md
+
+__pycache__/
+*.pyc

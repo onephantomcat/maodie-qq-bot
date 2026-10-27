@@ -11,6 +11,8 @@ import { controlSaver, restoreControls } from './src/controls.mjs';
 import { join } from 'node:path';
 import { BiliLearning } from './src/learning.mjs';
 import { UsageMeter } from './src/usage.mjs';
+import {SocialFeatures} from './src/social.mjs';
+import {LocalOcr} from './src/ocr.mjs';
 
 const root = new URL('./', import.meta.url);
 const log = message => console.log(`[${new Date().toLocaleTimeString('zh-CN', { hour12: false })}] ${message}`);
@@ -34,6 +36,8 @@ async function main() {
   catch (error) { if (error.code !== 'ENOENT') throw new Error('历史账单摘要无法读取，未覆盖原文件'); }
   const usage = await new UsageMeter(join(serviceRoot, 'usage.local.json'), { historicalBill }).load();
   const llm = new LlmClient(config.llm, persona, fetch, { onUsage: row => usage.record(row), log });
+  const social = config.features?.enabled === false ? null : await new SocialFeatures(config,join(serviceRoot,'social.local.json')).load();
+  const ocr = config.features?.imageOcr === false ? null : new LocalOcr({python:config.features?.ocrPython||'python',resolveImage:file=>transport.request('get_image',{file},12000)});
   let bot;
   let saveControls;
   const learningPath = process.env.LOCALAPPDATA ? join(process.env.LOCALAPPDATA,'QQFanGu','learning.local.json') : fileURLToPath(new URL('learning.local.json',root));
@@ -46,7 +50,7 @@ async function main() {
     media: new LocalMedia(fileURLToPath(root), config.media),
     knowledge,
     learner,
-    usage,
+    usage, social, ocr,
     sendPrivate: async (userId,message) => {
       if (!transport.ready) throw new Error('QQ连接未就绪');
       return transport.request('send_private_msg',{user_id:Number(userId),message});
@@ -60,7 +64,7 @@ async function main() {
   log(`${config.displayName || '耄耋'}机器人启动；${[...bot.states.values()].map(s => `${s.groupId}：${s.enabled ? '开启' : '暂停'}、${s.wildMode ? '乱咬' : '普通互动'}、火力${s.spice}`).join('；')}。`);
   log('本机输入 stop 暂停，start 开启，reset 清空，status 查看状态，quit 退出。');
   const input = createInterface({ input: process.stdin, output: process.stdout });
-  const stop = () => { learner.stop(); bot.invalidatePending(); transport.stop(); input.close(); };
+  const stop = () => { ocr?.close(); learner.stop(); bot.invalidatePending(); transport.stop(); input.close(); };
   process.once('SIGINT', stop);
   process.once('SIGTERM', stop);
   input.on('line', line => {
