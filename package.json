@@ -1,0 +1,18 @@
+{
+  "name": "maodie-qq-bot",
+  "version": "1.12.0",
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "start": "node index.mjs",
+    "test": "node --test",
+    "build:windows": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File windows/build.ps1"
+  },
+  "dependencies": {
+    "ws": "^8.18.0"
+  },
+  "license": "MIT",
+  "description": "QQ 猫系互动机器人，支持 OneBot、OpenAI 兼容接口、本地音效和表情"
+}

@@ -1,0 +1,16 @@
+{
+  "updatedAt": "2026-10-26",
+  "note": "人工整理的常见用法与接梗提示；参考B站公开页面及检索摘要，不是视频逐字稿、实时热榜或已经核实的首发溯源。接法为本项目原创提示。",
+  "entries": [
+    {"name":"耄耋","aliases":["圆头耄耋","猫爹"],"meaning":"猫梗中常指圆头、脾气大的猫；脱离猫梗时，耄耋也有高龄老人的本义。","hint":"只有猫梗语境才自称圆头猫，别把谈论老人也当成玩梗。","sources":["https://www.bilibili.com/read/cv40875063/","https://www.bilibili.com/video/BV1TrVFzaEE2/"]},
+    {"name":"哈气","aliases":["哈气了","别哈气"],"meaning":"猫发出嘶声的动作；猫梗里也拿来调侃炸毛、生气的样子。","hint":"可以装作小猫呼气；遇到认真不满先正常沟通，不替对方诊断情绪。","sources":["https://www.bilibili.com/video/BV1TrVFzaEE2/"]},
+    {"name":"哈基米","aliases":["哈吉米","hajimi"],"meaning":"与《赛马娘》蜂蜜哼唱有关，中文二创经常配猫视频，因此也被拿来称呼可爱猫咪。","hint":"短短接一句猫猫或蜂蜜话题，不复读长段歌词，也别把它说成日语里猫的本义。","sources":["https://www.bilibili.com/read/cv23926930/","https://www.bilibili.com/video/BV1To4y1n7Yr"]},
+    {"name":"曼波","aliases":["曼博","manbo"],"meaning":"二创里常当作欢快、洗脑的拟声口号，常和猫猫小曲一起出现；也可能指曼波舞，按语境区分。","hint":"轻快接一句曼波猫猫，别强行解释成具体论点，不复制歌词。","sources":["https://www.bilibili.com/video/av1102619239/"]},
+    {"name":"红温","aliases":["红温了","已红温"],"meaning":"网络聊天常用来形容急了、气得脸红或情绪上头，带有游戏过热状态的比喻色彩。","hint":"可接散热、风扇、降温的比喻；温和档关心对方，互怼档才适度调侃。","sources":["https://www.bilibili.com/video/BV1nmwmePEya/"]},
+    {"name":"包的","aliases":["包的呀","包赢","包会的"],"meaning":"表示保证、没问题、很有把握；有时故意说满，形成反差。","hint":"围绕信心和实际表现接话。主人说包的时礼貌配合，不挖苦主人。","sources":["https://www.bilibili.com/video/BV1eb421a7g5/"]},
+    {"name":"已老实求放过","aliases":["已老实","求放过","老实了"],"meaning":"认怂、服气或请求停止的表达，也常用于夸张自嘲。","hint":"顺势收口：好，收爪。不继续追骂，不把求停当作加大火力的理由。","sources":["https://www.bilibili.com/video/BV1EJ4m1T7z8/"]},
+    {"name":"那咋了","aliases":["那咋啦"],"meaning":"用反问表达不在意、随它去或反驳，既能自我宽慰，也可能显得敷衍。","hint":"可以顺着松弛感接话；对方认真提问时要回答内容，别只复读那咋了。","sources":["https://www.bilibili.com/video/BV1AU411S7on/","https://www.bilibili.com/video/BV1kG6BYSEc7/"]},
+    {"name":"何意味","aliases":["何意味啊"],"meaning":"类似什么意思，用简短、略显生硬的问法表达疑惑或吐槽。","hint":"优先解释刚才那句话；如果只是玩梗，可以用猫猫困惑的语气短接。","sources":["https://www.bilibili.com/video/BV1NH4mzZEsq"]},
+    {"name":"硬控","aliases":["硬控我","被硬控"],"meaning":"由游戏控制效果引申，调侃某段内容太抓注意力，让人停下来一直看。","hint":"可以围绕看入迷、忘了划走接话，不理解为真实强制控制。","sources":["https://www.bilibili.com/video/BV1PC411Y7Fo/"]}
+  ]
+}

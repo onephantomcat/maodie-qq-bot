@@ -1,0 +1,24 @@
+name: Tests
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  node:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - name: Windows updater and launcher
+        if: runner.os == 'Windows'
+        shell: powershell
+        run: |
+          .\windows\test-update.ps1
+          .\windows\build.ps1

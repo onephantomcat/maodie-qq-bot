@@ -1,0 +1,45 @@
+{
+  "displayName": "耄耋",
+  "selfId": "10001",
+  "onebot": {
+    "url": "ws://127.0.0.1:3002",
+    "token": ""
+  },
+  "llm": {
+    "baseUrl": "https://tokendance.space/gateway/v1",
+    "apiKey": "",
+    "model": "deepseek-v4-flash",
+    "thinkingType": "disabled",
+    "temperature": 1.0,
+    "maxTokens": 320,
+    "timeoutMs": 45000
+  },
+  "ownerId": "40001",
+  "politeUsers": [],
+  "enabledOnStart": true,
+  "media": {
+    "audioDirectory": "",
+    "stickerDirectory": "assets/stickers",
+    "stickersEnabled": true,
+    "stickerProbability": 0.4
+  },
+  "groups": [
+    {
+      "groupId": "20001",
+      "targetId": "30001"
+    }
+  ],
+  "behavior": {
+    "cooldownSeconds": 8,
+    "interactionCooldownSeconds": 2,
+    "historyTurns": 4,
+    "maxReplyChars": 120,
+    "maxInputChars": 500,
+    "eventMaxAgeSeconds": 60,
+    "mentionTarget": true,
+    "requireAtSelf": false,
+    "respondToInteractions": true,
+    "wildReplyProbability": 0.2,
+    "spice": 3
+  }
+}

@@ -1,0 +1,10 @@
+config.local.json
+*.local.json*
+node_modules/
+assets/stickers/*
+!assets/stickers/.gitkeep
+dist/
+*.exe
+*.zip
+*.log
+使用说明.md
