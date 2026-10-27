@@ -1,4 +1,4 @@
-﻿param([ValidateSet('start','stop','status','check')][string]$Action='start')
+﻿param([ValidateSet('start','stop','status','snapshot','check')][string]$Action='start')
 $ErrorActionPreference='Stop'
 [Console]::OutputEncoding=New-Object Text.UTF8Encoding($false)
 $appRoot=Split-Path $PSScriptRoot -Parent
@@ -11,6 +11,21 @@ try {
  if(!$held){throw 'Another start or update is in progress.'}
  if($Action -eq 'start') { & (Join-Path $appRoot 'start-services.ps1') }
  elseif($Action -eq 'check') { & node $entryPath --check; if($LASTEXITCODE -ne 0){throw 'Config check failed.'} }
+ elseif($Action -eq 'snapshot') {
+  $snapshotRunning=$false
+  $snapshotPid=Join-Path $serviceRoot 'bot.pid'
+  if(Test-Path -LiteralPath $snapshotPid){
+   $snapshotId=0
+   if([int]::TryParse(([IO.File]::ReadAllText($snapshotPid)).Trim(),[ref]$snapshotId)){
+    $snapshotProcess=Get-CimInstance Win32_Process -Filter "ProcessId=$snapshotId" -ErrorAction SilentlyContinue
+    $snapshotRunning=$snapshotProcess -and $snapshotProcess.CommandLine -and $snapshotProcess.CommandLine.Contains($entryPath)
+   }
+  }
+  $snapshotArgs=@((Join-Path $PSScriptRoot 'status.mjs'),'--json')
+  if(!$snapshotRunning){$snapshotArgs+='--listener-stopped'}
+  & node @snapshotArgs
+  if($LASTEXITCODE -ne 0){throw 'Status snapshot failed.'}
+ }
  elseif($Action -eq 'status') {
   $statusId=[int](Get-Content -LiteralPath (Join-Path $serviceRoot 'bot.pid') -Raw)
   $statusProcess=Get-CimInstance Win32_Process -Filter "ProcessId=$statusId"

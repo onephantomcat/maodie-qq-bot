@@ -2,7 +2,7 @@
 
 一个运行在本机的猫系 QQ 群聊机器人。通过 OneBot v11 接入 QQ，用 OpenAI 兼容接口生成回复；支持多群独立开关、引用上下文、私人音效、静态/GIF 表情、本地热梗和手动 B站学习。
 
-当前版本：**1.12.0**。原创程序代码采用 MIT 许可。
+当前版本：**1.13.0**。原创程序代码采用 MIT 许可。
 
 ## 可以做什么
 
@@ -32,7 +32,7 @@ node index.mjs
 
 ### Windows EXE
 
-下载 Releases 的 `maodie-windows-版本号.zip`，**完整解压**后双击 `耄耋机器人.exe`。启动器提供启动、停止服务、状态检查、配置、扫码登录、安装更新和打开日志。关闭启动器窗口不会停止机器人。
+下载 Releases 的 `maodie-windows-版本号.zip`，**完整解压**后双击 `耄耋机器人.exe`。启动器采用耄耋主题：头像侧栏、QQ连接提示、每群独立状态卡和带时间的运行记录。提供启动、停止服务、刷新状态、配置、扫码登录、安装更新和打开日志；窗口打开时每30秒只读刷新状态，不调用模型。关闭启动器窗口不会停止机器人。
 
 这是原生 Windows 启动器，程序代码放在同级 `app` 文件夹；不要只复制 EXE。电脑仍需安装 Node.js 和 QQ。脚本默认 QQ 位于 `C:\Program Files\Tencent\QQNT\QQ.exe`，独立 NapCat Shell 位于 `%LOCALAPPDATA%\QQFanGu\napcat`，OneBot 地址由配置文件决定。使用其他部署方式时可直接 `node index.mjs`。
 
@@ -141,7 +141,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File windows/test-update.ps1
 python tools/package-release.py
 ```
 
-核心逻辑有 93 项本地测试，覆盖权限、暂停、排队、引用、媒体、统计和学习。更新器另有隔离目录测试，验证保留本机数据、失败恢复以及回收旧版。这些测试不向 QQ 群发送消息，也不调用付费模型。
+核心逻辑有 96 项本地测试，覆盖权限、暂停、排队、引用、媒体、统计和学习。更新器另有隔离目录测试，验证保留本机数据、失败恢复以及回收旧版。这些测试不向 QQ 群发送消息，也不调用付费模型。
 
 ```text
 index.mjs        启动和运行时接线
