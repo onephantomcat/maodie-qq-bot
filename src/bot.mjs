@@ -161,8 +161,8 @@ export class RoastBot {
       ...(this.social ? ['/这句不错 — 引用我的回复，记下偏好','/太套了 — 引用我的回复，少用这类措辞'] : []),
       '', '🔥 火力档位',
       '/火力0 — 温和礼貌',
-      '/火力1 — 嘴硬反骨',
-      '/火力2 — 嘴欠拆台',
+      '/火力1 — 嘴硬',
+      '/火力2 — 孙吧抽象',
       '/火力3 — 嘴臭开怼',
       '', '🐾 自动接话 · 配图',
       `@${this.name} 出来 — 开启乱咬人`,
@@ -184,8 +184,8 @@ export class RoastBot {
       '/群 群号 暂停 — 暂停指定群',
       '/群 群号 清空 — 清空指定群会话',
       '/群 群号 火力0 — 温和猫猫',
-      '/群 群号 火力1 — 嘴硬反骨',
-      '/群 群号 火力2 — 嘴欠拆台',
+      '/群 群号 火力1 — 嘴硬',
+      '/群 群号 火力2 — 孙吧抽象',
       '/群 群号 火力3 — 嘴臭开怼',
       '/群 群号 乱咬人开始 — 开启文字随机接话',
       '/群 群号 乱咬人停止 — 停止文字随机接话',
@@ -306,7 +306,7 @@ export class RoastBot {
       const next = Number(action.slice(-1));
       if (state.spice === 0 || next === 0) { this.social?.clear(state.groupId); state.history = []; state.otherHistories.clear(); state.ownTexts.clear(); state.ownMentions.clear(); }
       state.spice = next;
-      reply = `火力调到 ${state.spice} 档${next === 0 ? '：温和礼貌' : ''}。`;
+      reply = `火力调到 ${state.spice} 档：${['温和礼貌', '嘴硬', '孙吧抽象', '嘴臭开怼'][state.spice] || ''}。`;
     }
     else if (action === '状态') reply = `${this.name}${state.enabled ? '开启' : '暂停'}，${state.wildMode ? '乱咬人开启' : '普通互动'}，火力 ${state.spice}，自动表情${state.stickersEnabled ? '开启' : '关闭'}，自动识图${state.autoImageEnabled?Math.round(state.autoImageProbability*100)+'%':'关闭'}，已提交 ${state.replies} 句、${state.mediaSent} 次点播${state.busy ? '，正在回话或发送' : ''}${state.queue.length ? `，另有${state.queue.length}条互动排队` : ''}。`;
     else return this.menu(event, state);
@@ -463,7 +463,7 @@ export class RoastBot {
 
       let inputText = text || (autoImageSelected ? '群友刚发了一张图片或表情包，请围绕内容自然接一句。' : directMention ? '（对方只@了你，没有附带文字）' : '（对方引用了你的消息，没有附带文字）');
       let ocrText='',imageData='';
-      if(this.ocr && (autoImageSelected || (explicitInteraction && imageIntent(text)))){
+      if(this.ocr && (autoImageSelected || (explicitInteraction && (imageIntent(text) || imageSegments(event).length > 0)))){
         let images=imageSegments(event);
         if(!images.length)images=original?.images||[];
         if(!images.length&&replyId){try{const raw=await this.lookupReply(replyId);if(String(raw?.group_id)===state.groupId&&raw?.message_type==='group'&&String(raw.message_id)===replyId)images=imageSegments(raw);}catch{}}
@@ -483,10 +483,10 @@ export class RoastBot {
       const isOwner = senderId === c.ownerId;
       const directPoliteReference = [event,...events].some(item=>this.courtesy.involves(item,messageText(item),original)) || this.courtesy.mentionsText(ocrText,state.groupId);
       let quietTone = directPoliteReference || history.some(x => x.role === 'user' && x.politeReference === true);
-      const effectiveSpice = isOwner || quietTone ? 0 : state.spice;
+      const effectiveSpice = quietTone || (isOwner && state.spice !== 3) ? 0 : state.spice;
       let polite = effectiveSpice === 0;
       const expandedInput = `${inputText} ${(this.knowledge?.interpret(inputText) || []).map(x=>x.canonical).join(' ')}`;
-      const result = await this.generate(inputText, prepareHistory(history, polite), effectiveSpice, controller.signal, b.maxReplyChars, { isOwner, quietTone, groupId: state.groupId, quoteContext, addressedToSelf: directMention || original?.isSelf === true, memeContext: this.knowledge?.context(inputText) || '', learnedContext: this.learner?.context(expandedInput) || '', roomContext:this.social?.context(state.groupId,[event.message_id,...messageIds])||'', socialContext:this.social?.toneContext(state.groupId)||'',imageData });
+      const result = await this.generate(inputText, prepareHistory(history, polite), effectiveSpice, controller.signal, b.maxReplyChars, { isOwner, quietTone, groupId: state.groupId, quoteContext, addressedToSelf: directMention || original?.isSelf === true, memeContext: this.knowledge?.context(inputText) || '', learnedContext: this.learner?.context(expandedInput) || '', roomContext:this.social?.context(state.groupId,[event.message_id,...messageIds])||'', socialContext:this.social?.toneContext(state.groupId)||'',imageData,imageKind:(ocrText||imageData)?(autoImageSelected?'auto':'manual'):'' });
       if (controller.signal.aborted || generation !== state.generation || !state.enabled) return;
       quietTone ||= this.courtesy.mentionsText(result, state.groupId);
       polite ||= quietTone;

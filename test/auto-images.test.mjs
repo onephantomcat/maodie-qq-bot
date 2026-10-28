@@ -78,3 +78,13 @@ test('视觉请求使用单独模型，图片只进本轮用户消息，仍只�
  await llm.generate('接一句',[],0,undefined,120,{imageData:'data:image/jpeg;base64,YWJj'});assert.equal(count,1);assert.equal(body.model,'deepseek-v4.1-flash');assert.equal(body.messages.at(-1).content[1].type,'image_url');assert.equal(body.max_tokens,320);assert.doesNotMatch(body.messages[0].content,/YWJj/);
  assert.deepEqual(visionRate(new Date('2026-10-27T13:00:00Z')),{input:.8,output:3.2});assert.deepEqual(visionRate(new Date('2026-10-27T02:00:00Z')),{input:1.6,output:6.4});
 });
+
+
+test('主动@带图片即识别，不依赖识图关键词或自动抽样；无图文字不启动OCR',async()=>{
+ const r=rig({random:()=>1});
+ await r.bot.handle(event('这是什么',{at:true}));
+ assert.equal(r.scans(),1);assert.equal(r.calls.length,1);
+ assert.equal(r.calls[0][5].imageKind,'manual');
+ const textOnly=rig({random:()=>1});await textOnly.bot.handle(event('你好',{at:true,images:false}));
+ assert.equal(textOnly.scans(),0);assert.equal(textOnly.calls.length,1);
+});

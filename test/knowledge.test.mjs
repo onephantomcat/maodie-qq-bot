@@ -56,7 +56,7 @@ test('礼貌人设排除辱骂历史，梗背景有上限，思考仍关闭', as
     requests.push(JSON.parse(init.body));
     return Response.json({ choices: [{ message: { content: '主人，包的，我在认真听。' } }] });
   });
-  await llm.generate('包的', [{ role: 'assistant', content: '你他妈放什么狗屁' }], 3, undefined, 60, { isOwner: true, memeContext: '梗'.repeat(800) });
+  await llm.generate('包的', [{ role: 'assistant', content: '你他妈放什么狗屁' }], 2, undefined, 60, { isOwner: true, memeContext: '梗'.repeat(800) });
   const body = requests[0];
   assert.equal(body.messages.length, 2);
   assert.doesNotMatch(body.messages[0].content, /嘴臭|装逼|旧记录/);

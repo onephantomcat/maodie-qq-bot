@@ -4,6 +4,8 @@ import { dirname } from 'node:path';
 const dayKey = date => new Intl.DateTimeFormat('sv-SE', { timeZone: 'Asia/Shanghai' }).format(date);
 const timeLabel = value => new Date(value).toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai', hour12: false });
 const empty = () => ({ calls: 0, failed: 0, input: 0, output: 0, missingUsage: 0, unpriced: 0, microYuan: 0 });
+const kinds = {text:'普通文字',autoOcr:'自动识图·本机OCR',autoVision:'自动识图·视觉模型',manualOcr:'主动识图·本机OCR',manualVision:'主动识图·视觉模型'};
+const validRow = row => row && Object.keys(empty()).every(key => Number.isSafeInteger(row[key]) && row[key] >= 0);
 const tokenCount = n => Number.isSafeInteger(n) && n >= 0 ? n : null;
 
 export function visionRate(date){
@@ -24,7 +26,8 @@ export class UsageMeter {
       const saved = JSON.parse(await readFile(this.path, 'utf8'));
       if (!saved.days || !Number.isFinite(Date.parse(saved.startedAt))) throw new Error();
       for (const groups of Object.values(saved.days)) for (const bucket of Object.values(groups)) {
-        if (Object.keys(empty()).some(key => !Number.isSafeInteger(bucket[key]) || bucket[key] < 0)) throw new Error();
+        if (!validRow(bucket)) throw new Error();
+        if (bucket.byKind != null && (typeof bucket.byKind !== 'object' || Array.isArray(bucket.byKind) || Object.entries(bucket.byKind).some(([key,row]) => !Object.hasOwn(kinds,key) || !validRow(row)))) throw new Error();
       }
       this.data = saved;
     } catch (error) { if (error.code !== 'ENOENT') throw new Error('本机用量统计无法读取，请检查 usage.local.json；原文件未覆盖'); }
@@ -39,36 +42,48 @@ export class UsageMeter {
     });
     return this.writes;
   }
-  async record({ model, usage, ok, groupId, scope = 'chat' }) {
+  async record({ model, usage, ok, groupId, scope = 'chat', kind = '' }) {
     const at=this.now();const day = dayKey(at);
     const key = scope === 'chat' && /^\d+$/.test(String(groupId)) ? `群${groupId}` : scope === 'learning' ? '学习整理' : '本机预览';
     const groups = this.data.days[day] ||= {};
     const row = groups[key] ||= empty();
-    row.calls++; if (!ok) row.failed++;
+    const delta = empty();
+    delta.calls++; if (!ok) delta.failed++;
     const input = tokenCount(usage?.prompt_tokens), output = tokenCount(usage?.completion_tokens);
-    if (input === null || output === null) row.missingUsage++;
+    if (input === null || output === null) delta.missingUsage++;
     else {
-      row.input += input; row.output += output;
-      // 仅采用2026-10-26已核对账单的Flash观察单价，明确作为估算，不冒充实时账单。
-      if (model === 'deepseek-v4-flash') row.microYuan += input + 2 * output;
-      else if(model==='deepseek-v4.1-flash'){const rate=visionRate(at);row.microYuan+=Math.round(input*rate.input+output*rate.output);}
-      else row.unpriced++;
+      delta.input += input; delta.output += output;
+      if (model === 'deepseek-v4-flash') delta.microYuan += input + 2 * output;
+      else if(model==='deepseek-v4.1-flash'){const rate=visionRate(at);delta.microYuan+=Math.round(input*rate.input+output*rate.output);}
+      else delta.unpriced++;
+    }
+    for (const field of Object.keys(delta)) row[field] += delta[field];
+    if (scope === 'chat' && Object.hasOwn(kinds,kind)) {
+      row.byKind ||= {};
+      const detail = row.byKind[kind] ||= empty();
+      for (const field of Object.keys(delta)) detail[field] += delta[field];
     }
     await this.save();
   }
   report(todayOnly = false) {
     const today = dayKey(this.now());
     const selected = Object.entries(this.data.days).filter(([date]) => !todayOnly || date === today);
-    const totals = empty(), byGroup = {};
+    const totals = empty(), byGroup = {}, byKind = {};
     for (const [, groups] of selected) for (const [name, row] of Object.entries(groups)) {
       const aggregate = byGroup[name] ||= empty();
       for (const key of Object.keys(totals)) { totals[key] += row[key]; aggregate[key] += row[key]; }
+      for (const [kind,detail] of Object.entries(row.byKind || {})) { const bucket=byKind[kind] ||= empty(); for(const key of Object.keys(bucket)) bucket[key]+=detail[key]; }
     }
     const line = row => `${row.calls}次请求 · 输入${row.input} / 输出${row.output} token · 估算¥${(row.microYuan / 1e6).toFixed(6)}`;
     const lines = [ `【耄耋 · ${todayOnly ? '今日' : '累计'}用量】`, `本机统计起于：${timeLabel(this.data.startedAt)}`, ...(todayOnly ? [`统计日期：${today}（北京时间）`] : []), line(totals),
       ...Object.entries(byGroup).map(([name, row]) => `${name}：${line(row)}`),
       `失败/取消/结果未知：${totals.failed}次；缺usage：${totals.missingUsage}次；无适用单价：${totals.unpriced}次。`,
-      '估算：文本Flash输入¥1/百万、输出¥2/百万；视觉4.1 Flash按10月27日目录价与北京时间峰谷估算，未扣缓存折扣。未知用量和单价不计金额，实际扣费以官网为准。' ];
+      '估算：文本Flash输入¥1/百万、输出¥2/百万；视觉4.1 Flash按10月28日目录价与北京时间峰谷估算，未扣缓存折扣。未知用量和单价不计金额，实际扣费以官网为准。' ];
+    if (Object.keys(byKind).length) {
+      lines.push(...Object.entries(byKind).map(([kind,row]) => `${kinds[kind]}：${line(row)}`));
+      const classified=Object.values(byKind).reduce((n,row)=>n+row.calls,0);
+      if(classified<totals.calls)lines.push(`另有${totals.calls-classified}次旧记录或学习/预览调用未作识图分类；不推算为零次识图。`);
+    } else if(totals.calls) lines.push('当前记录未区分自动识图次数，不能从总用量反推出识图占比。');
     const historicalBill = this.historicalBill?.total;
     if (historicalBill && (!todayOnly || String(historicalBill.last).startsWith(today))) {
       lines.push(`历史已核对账单：${historicalBill.calls}次，¥${historicalBill.cost_yuan}，截至${historicalBill.last}。`, '历史账单与本机新增统计分别显示，中间未记录的区间不能据此合计为完整累计费用。');

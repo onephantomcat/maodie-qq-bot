@@ -75,8 +75,9 @@ test('近期用语与猫情绪进入资料区，不修改系统权限或增加�
 test('图片仅在显式识图时读取；OCR失败、跨群引用和暂停都不产生模型回复',()=>fixture(async root=>{
  let scans=0;const image={type:'image',data:{url:'https://gchat.qpic.cn/gchatpic_new/test',file:'qq-image'}};
  const r=await rig(root,{dependencies:{ocr:{recognize:async()=>{scans++;return '今天下午三点开会';}},lookupReply:async()=>({message_id:88,message_type:'group',group_id:20002,message:[image]})}});
+ r.bot.states.get('20001').autoImageEnabled=false;
  await r.bot.handle(event('看看这张图',{segments:[image]}));assert.equal(scans,1);assert.match(r.calls[0][0],/本机OCR.*今天下午三点开会/);
- await r.bot.handle(event('普通聊天',{segments:[image]}));assert.equal(scans,1);
+ await r.bot.handle(event('普通聊天',{segments:[image],at:false}));assert.equal(scans,1);
  await r.bot.handle(event('/识图',{reply:88}));assert.equal(scans,1);
  r.bot.ocr={recognize:async()=>{throw new Error('图片文字未读到');}};const calls=r.calls.length;await r.bot.handle(event('/识图',{segments:[image]}));assert.equal(r.calls.length,calls);
  await r.bot.handle(event('/暂停',{user:40001,at:false}));await r.bot.handle(event('/识图',{segments:[image]}));assert.equal(r.calls.length,calls);

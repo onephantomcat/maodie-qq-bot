@@ -265,3 +265,18 @@ test('学习整理计入单独用量，不伪装成群聊或额外调用模型',
   await llm.summarizeLearning([{ title: '示例', text: '公开资料' }]);
   assert.equal(requests, 1); assert.equal(rows[0].scope, 'learning'); assert.equal(rows[0].usage.completion_tokens, 5);
 });
+
+
+test('旧统计不猜测识图次数，新记录按自动视觉与文字分类并沿用峰谷价格',async()=>temp(async root=>{
+ const path=join(root,'usage.local.json');const now=()=>new Date('2026-10-28T02:00:00Z');
+ const meter=await new UsageMeter(path,{now}).load();
+ await meter.record({model:'deepseek-v4-flash',usage:{prompt_tokens:100,completion_tokens:20},ok:true,groupId:'20001'});
+ assert.match(meter.report(),/未区分自动识图次数/);
+ await meter.record({model:'deepseek-v4.1-flash',usage:{prompt_tokens:1000,completion_tokens:20},ok:true,groupId:'20001',kind:'autoVision'});
+ await meter.record({model:'deepseek-v4-flash',usage:{prompt_tokens:100,completion_tokens:20},ok:true,groupId:'20001',kind:'text'});
+ const loaded=await new UsageMeter(path,{now}).load();const report=loaded.report(true);
+ assert.match(report,/自动识图·视觉模型：1次请求.*估算¥0.001728/);
+ assert.match(report,/普通文字：1次请求/);assert.match(report,/另有1次旧记录/);
+ assert.match(report,/3次请求.*估算¥0.002008/);
+ const saved=await readFile(path,'utf8');assert.doesNotMatch(saved,/apiKey|imageData|prompt_tokens|base64/);
+}));
